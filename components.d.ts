@@ -7,11 +7,14 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ColorPalette: typeof import('./src/components/ColorPalette.vue')['default']
     Postcard: typeof import('./src/components/Postcard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    TheCounter: typeof import('./src/components/TheCounter.vue')['default']
-    TheFooter: typeof import('./src/components/TheFooter.vue')['default']
-    TheInput: typeof import('./src/components/TheInput.vue')['default']
+    VarButton: typeof import('@varlet/ui')['_ButtonComponent']
+    VarInput: typeof import('@varlet/ui')['_InputComponent']
+    VarLoading: typeof import('@varlet/ui')['_LoadingComponent']
+    VarSpace: typeof import('@varlet/ui')['_SpaceComponent']
+    VarTextarea: typeof import('@varlet/ui')['_TextareaComponent']
   }
 }
