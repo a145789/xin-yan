@@ -4,8 +4,18 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
+  --color-primary: rgb(168 85 247 / 1) !important;
+  --color-danger: rgb(219 39 119 / 1) !important;
 }
 
-html.dark {
-  background: #121212;
+@font-face {
+  font-family: 'SmileySans';
+  font-weight: normal;
+  font-style: normal;
+  src: url('../assets/SmileySans-Oblique.ttf.woff2') format('woff2');
+  font-display: block;
+}
+
+.font-smiley-sans {
+  font-family: 'SmileySans', sans-serif;
 }

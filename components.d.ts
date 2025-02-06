@@ -15,6 +15,5 @@ declare module 'vue' {
     VarInput: typeof import('@varlet/ui')['_InputComponent']
     VarLoading: typeof import('@varlet/ui')['_LoadingComponent']
     VarSpace: typeof import('@varlet/ui')['_SpaceComponent']
-    VarTextarea: typeof import('@varlet/ui')['_TextareaComponent']
   }
 }

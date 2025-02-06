@@ -13,6 +13,7 @@ export default antfu(
         'error',
         'all',
       ],
+      'style/brace-style': ['error', '1tbs'],
       'brace-style': ['error', '1tbs'],
       'array-bracket-newline': ['error', { multiline: true }],
       'vue/attributes-order': [

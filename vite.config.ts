@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 
 import path from 'node:path'
+import { VarletImportResolver } from '@varlet/import-resolver'
 import Vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import UnoCSS from 'unocss/vite'
@@ -37,11 +38,13 @@ export default defineConfig({
       dts: true,
       dirs: ['./src/composables'],
       vueTemplate: true,
+      resolvers: [VarletImportResolver({ autoImport: true })],
     }),
 
     // https://github.com/antfu/vite-plugin-components
     Components({
       dts: true,
+      resolvers: [VarletImportResolver()],
     }),
 
     // https://github.com/antfu/unocss

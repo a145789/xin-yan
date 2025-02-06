@@ -1,2 +1,4 @@
-export const isDark = useDark()
+export const isDark = useDark({
+  disableTransition: false,
+})
 export const toggleDark = useToggle(isDark)
