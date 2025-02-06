@@ -24,7 +24,7 @@ export function sanitizeFileName(name: string): string {
 }
 
 export default defineConfig({
-  base: '/xinyan/',
+  base: './',
   resolve: {
     alias: {
       '~/': `${path.resolve(__dirname, 'src')}/`,
