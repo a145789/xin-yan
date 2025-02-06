@@ -10,7 +10,7 @@ import 'uno.css'
 const app = createApp(App)
 const router = createRouter({
   routes,
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory('/xinyan/'),
 })
 app.use(router)
 app.mount('#app')
