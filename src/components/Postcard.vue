@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { StyleValue } from 'vue'
 import type { PostcardConfig } from '../pages/index.vue'
+import { useElementToImage } from '~/composables/useElementToImage'
 
 interface PostcardProps extends PostcardConfig {
   image: string
@@ -122,51 +123,65 @@ onMounted(() => {
     loadImage()
   }
 })
+
+const { downloadElementAsImage } = useElementToImage(postcardContainer)
+
+function handleSelect() {
+  downloadElementAsImage()
+}
+
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 </script>
 
 <template>
-  <div
-    ref="postcardContainer"
-    class="postcard-container"
-    :style="containerStyle"
-  >
+  <var-menu-select :trigger="isLargeScreen ? 'hover' : 'click'" @select="handleSelect">
     <div
-      class="postcard-background"
-      :style="backgroundStyle"
-    />
-    <div class="postcard-content">
+      ref="postcardContainer"
+      class="postcard-container"
+      :style="containerStyle"
+    >
       <div
-        v-if="imageLoaded"
-        class="postcard-image-container"
-        :style="imageContainerStyle"
-      >
+        class="postcard-background"
+        :style="backgroundStyle"
+      />
+      <div class="postcard-content">
         <div
-          class="postcard-image"
+          v-if="imageLoaded"
+          class="postcard-image-container"
+          :style="imageContainerStyle"
+        >
+          <div
+            class="postcard-image"
+            :style="{
+              backgroundImage: `url(${props.image})`,
+              borderRadius: `${props.imageBorderRadius}px`,
+              boxShadow: `0 ${props.shadowSize / 2}px ${props.shadowSize}px rgba(0, 0, 0, 0.3)`,
+              zIndex: 1,
+            }"
+          />
+        </div>
+        <div
+          v-else-if="imageError"
+          class="postcard-error flex items-center justify-center p-4 text-center"
+        >
+          <span class="text-sm text-red-500">图片加载失败</span>
+        </div>
+        <div
+          v-else
+          class="postcard-loading animate-pulse rounded"
           :style="{
-            backgroundImage: `url(${props.image})`,
             borderRadius: `${props.imageBorderRadius}px`,
-            boxShadow: `0 ${props.shadowSize / 2}px ${props.shadowSize}px rgba(0, 0, 0, 0.3)`,
-            zIndex: 1,
+            minHeight: '120px',
+            minWidth: '160px',
           }"
         />
       </div>
-      <div
-        v-else-if="imageError"
-        class="postcard-error flex items-center justify-center p-4 text-center"
-      >
-        <span class="text-sm text-red-500">图片加载失败</span>
-      </div>
-      <div
-        v-else
-        class="postcard-loading animate-pulse rounded"
-        :style="{
-          borderRadius: `${props.imageBorderRadius}px`,
-          minHeight: '120px',
-          minWidth: '160px',
-        }"
-      />
     </div>
-  </div>
+
+    <template #options>
+      <var-menu-option label="下载" />
+    </template>
+  </var-menu-select>
 </template>
 
 <style scoped>

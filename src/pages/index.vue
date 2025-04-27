@@ -23,7 +23,7 @@ defineOptions({
 
 const postcardConfig = ref<PostcardConfig>({
   blurAmount: 5,
-  padding: 16,
+  padding: 30,
   shadowSize: 12,
   borderRadius: 12,
   imageBorderRadius: 8,
@@ -75,14 +75,13 @@ function resetImage() {
             Postcard Creator
           </h1>
 
-          <var-space justify="flex-end">
-            <var-button
-              type="danger"
-              @click="resetImage"
-            >
-              重新上传
-            </var-button>
-          </var-space>
+          <var-button
+            v-if="previewImage && imageData"
+            type="danger"
+            @click="resetImage"
+          >
+            重新上传
+          </var-button>
         </div>
 
         <var-loading
