@@ -1,1 +1,0 @@
-import{createElementBlock as e,openBlock as t}from"./runtime-core.esm-bundler-Bjl6g2L5.js";import{__plugin_vue_export_helper_default as n}from"./plugin-vueexport-helper-BZjWtXke.js";const r={};function i(n,r){return t(),e(`div`,null,` Not Found `)}var a=n(r,[[`render`,i]]);export{a as default};
