@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col transition-all duration-300 dark:bg-#060606">
+  <div class="min-h-screen flex flex-col transition-all duration-300 dark:bg-#060606 dark:text-#fafafa">
     <!-- 顶部导航 -->
     <nav class="sticky top-0 z-50 shadow-md">
       <div class="mx-auto h-14 max-w-screen-xl flex items-center justify-between bg-#fff px-4 dark:bg-#1b1b1f dark:text-zinc-200">
