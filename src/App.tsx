@@ -1,16 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, Link as LinkIcon, Loader2, Image as ImageIcon, Sliders, Moon, Sun } from 'lucide-react';
 import { extractColors } from './utils/colorUtils';
-import { generatePostcard, generateBlurredPostcard, downloadImage } from './utils/imageUtils';
-import './index.css'
+import { generatePostcard, generateBlurredPostcard } from './utils/imageUtils';
+import { Header } from './components/Header';
+import { ImageUploader } from './components/ImageUploader';
+import { SettingsPanel } from './components/SettingsPanel';
+import { PostcardPreview } from './components/PostcardPreview';
+import './index.css';
 
 function App() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<{ url: string; color: string }[]>([]);
   const [blurredImage, setBlurredImage] = useState<string | null>(null);
-  const [urlInput, setUrlInput] = useState('');
-  const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   
   const [settings, setSettings] = useState({
@@ -22,34 +23,17 @@ function App() {
   const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImageUrl(url);
-      resetState();
-    }
-  };
-
-  const handleUrlSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (urlInput) {
-      setImageUrl(urlInput);
-      resetState();
-    }
-  };
-
-  const resetState = () => {
+  const handleImageSelect = (url: string) => {
+    setImageUrl(url);
     setGeneratedImages([]);
     setBlurredImage(null);
-    setExtractedColors([]);
   };
 
   const processImage = async () => {
@@ -64,7 +48,6 @@ function App() {
       }
 
       const colors = await extractColors(imageRef.current, 10);
-      setExtractedColors(colors);
       
       const postcards = colors.map(color => ({
         url: generatePostcard(imageRef.current!, color, settings.padding, settings.borderRadius, settings.blurAmount),
@@ -78,167 +61,58 @@ function App() {
 
     } catch (error) {
       console.error("Error processing image:", error);
-      alert("Failed to process image. Please try another one.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Re-generate when settings change if we already have results
+  // Auto-generate when image loads or settings change
   useEffect(() => {
-    if (generatedImages.length > 0 && !loading) {
-        const timer = setTimeout(() => {
-            processImage();
-        }, 500);
-        return () => clearTimeout(timer);
+    if (imageUrl) {
+      // Debounce slightly to avoid rapid re-generation during slider drag
+      const timer = setTimeout(() => {
+        processImage();
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  }, [settings]);
+  }, [imageUrl, settings]);
 
   return (
-    <div className="container compact">
-      <header className="header-compact">
-        <h1>明信片生成器</h1>
-        <button onClick={toggleTheme} className="btn icon-btn theme-toggle" aria-label="Toggle theme">
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-      </header>
+    <div className="min-h-screen bg-zinc-50 dark:bg-black transition-colors duration-300">
+      <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
+        <Header theme={theme} toggleTheme={toggleTheme} />
 
-      <div className="main-layout">
-        {/* Left Panel: Upload & Preview */}
-        <div className="left-panel">
-          <div className="card compact-card">
-            <div className="upload-row">
-              <label className="btn icon-btn">
-                <Upload size={18} />
-                <input type="file" accept="image/*" onChange={handleFileChange} hidden />
-              </label>
-              
-              <form onSubmit={handleUrlSubmit} className="url-form">
-                <div className="input-wrapper">
-                  <LinkIcon size={16} className="input-icon" />
-                  <input 
-                    type="text" 
-                    className="input compact-input" 
-                    placeholder="图片链接..." 
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                  />
-                </div>
-                <button type="submit" className="btn compact-btn">确定</button>
-              </form>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Sidebar: Controls */}
+          <div className="lg:col-span-4 space-y-6 sticky top-8">
+            <ImageUploader onImageSelect={handleImageSelect} />
+            
+            {imageUrl && (
+              <SettingsPanel settings={settings} setSettings={setSettings} />
+            )}
+            
+            {/* Instruction / Tip */}
+            {!imageUrl && (
+               <div className="bg-zinc-100 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
+                  <p>✨ <b>小贴士：</b> 上传一张图片，我们将自动为您提取主题色并生成一系列精美的明信片。</p>
+               </div>
+            )}
           </div>
 
-          {imageUrl && (
-            <div className="card compact-card">
-              <div className="preview-header">
-                 <div className="preview-title">
-                    <ImageIcon size={18} /> 
-                    <span>预览</span>
-                 </div>
-              </div>
-
-              <div className="image-preview-container">
-                <img 
-                  ref={imageRef} 
-                  src={imageUrl} 
-                  alt="Original" 
-                  crossOrigin="anonymous"
-                  className="main-preview"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Panel: Settings & Results */}
-        <div className="right-panel">
-          {imageUrl && (
-            <div className="card compact-card">
-               <div className="preview-header">
-                  <div className="preview-title">
-                     <Sliders size={18} />
-                     <span>参数设置</span>
-                  </div>
-               </div>
-
-               <div className="settings-panel">
-                   <div className="setting-item">
-                       <label>边距 ({settings.padding}%)</label>
-                       <input 
-                         type="range" min="0" max="40" 
-                         value={settings.padding} 
-                         onChange={e => setSettings({...settings, padding: Number(e.target.value)})} 
-                       />
-                   </div>
-                   <div className="setting-item">
-                       <label>圆角 ({settings.borderRadius}px)</label>
-                       <input 
-                         type="range" min="0" max="100" 
-                         value={settings.borderRadius} 
-                         onChange={e => setSettings({...settings, borderRadius: Number(e.target.value)})} 
-                       />
-                   </div>
-                   <div className="setting-item">
-                       <label>模糊 ({settings.blurAmount}px)</label>
-                       <input 
-                         type="range" min="0" max="100" 
-                         value={settings.blurAmount} 
-                         onChange={e => setSettings({...settings, blurAmount: Number(e.target.value)})} 
-                       />
-                   </div>
-               </div>
-               
-               <button 
-                 className="btn primary-btn full-width" 
-                 onClick={processImage} 
-                 disabled={loading}
-               >
-                 {loading ? (
-                     <span className="loading-text"><Loader2 className="spin" size={18} /> 生成中...</span>
-                 ) : '生成明信片'}
-               </button>
-            </div>
-          )}
-
-          {extractedColors.length > 0 && (
-              <div className="card compact-card">
-                  <h4 className="section-title">提取色板</h4>
-                  <div className="color-palette">
-                      {extractedColors.map((color, idx) => (
-                          <div key={idx} className="color-chip" style={{ backgroundColor: color }} title={color}>
-                              <span className="color-hex">{color}</span>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-          )}
-
-          {(generatedImages.length > 0 || blurredImage) && (
-            <div className="card compact-card">
-               <h4 className="section-title">生成结果 <span className="subtitle">(点击下载)</span></h4>
-               
-               <div className="grid compact-grid">
-                  {blurredImage && (
-                      <div className="result-item" onClick={() => downloadImage(blurredImage, 'postcard-blur.png')}>
-                          <img src={blurredImage} className="postcard-preview" alt="Blurred" />
-                          <div className="result-label">高斯模糊</div>
-                      </div>
-                  )}
-                  
-                  {generatedImages.map((img, idx) => (
-                      <div key={idx} className="result-item" onClick={() => downloadImage(img.url, `postcard-${img.color}.png`)}>
-                          <img src={img.url} className="postcard-preview" alt={img.color} />
-                          <div className="result-label" style={{ color: img.color }}>{img.color}</div>
-                      </div>
-                  ))}
-               </div>
-            </div>
-          )}
+          {/* Right Content: Preview & Results */}
+          <div className="lg:col-span-8">
+             <PostcardPreview 
+               originalUrl={imageUrl}
+               imageRef={imageRef}
+               generatedImages={generatedImages}
+               blurredImage={blurredImage}
+               loading={loading}
+             />
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
