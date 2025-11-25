@@ -1,67 +1,48 @@
-import { Sliders } from 'lucide-react';
-
-interface Settings {
-  padding: number;
-  borderRadius: number;
-  blurAmount: number;
-}
+import { Settings, Layout, Image as ImageIcon } from 'lucide-react';
 
 interface SettingsPanelProps {
-  settings: Settings;
-  setSettings: (settings: Settings) => void;
+  layoutMode: 'standard' | 'polaroid';
+  setLayoutMode: (mode: 'standard' | 'polaroid') => void;
 }
 
-export function SettingsPanel({ settings, setSettings }: SettingsPanelProps) {
-  const handleChange = (key: keyof Settings, value: number) => {
-    setSettings({ ...settings, [key]: value });
-  };
-
+export function SettingsPanel({ layoutMode, setLayoutMode }: SettingsPanelProps) {
   return (
-    <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
-      <div className="flex items-center gap-2 mb-4 text-zinc-900 dark:text-zinc-100 font-semibold">
-        <Sliders size={18} />
-        <span>参数设置</span>
+    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
+      <div className="flex items-center gap-2 mb-6 text-zinc-800 dark:text-zinc-200">
+        <Settings size={20} />
+        <h2 className="font-semibold">版式设置</h2>
       </div>
 
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            <label>边距</label>
-            <span>{settings.padding}%</span>
-          </div>
-          <input 
-            type="range" min="0" max="40" 
-            value={settings.padding} 
-            onChange={e => handleChange('padding', Number(e.target.value))}
-            className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-zinc-100"
-          />
-        </div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setLayoutMode('standard')}
+            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 ${
+              layoutMode === 'standard'
+                ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
+                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-500'
+            }`}
+          >
+            <Layout size={24} className="mb-2" />
+            <span className="text-sm font-medium">标准模式</span>
+          </button>
 
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            <label>圆角</label>
-            <span>{settings.borderRadius}px</span>
-          </div>
-          <input 
-            type="range" min="0" max="100" 
-            value={settings.borderRadius} 
-            onChange={e => handleChange('borderRadius', Number(e.target.value))}
-            className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-zinc-100"
-          />
+          <button
+            onClick={() => setLayoutMode('polaroid')}
+            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 ${
+              layoutMode === 'polaroid'
+                ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
+                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-500'
+            }`}
+          >
+            <ImageIcon size={24} className="mb-2" />
+            <span className="text-sm font-medium">拍立得</span>
+          </button>
         </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            <label>模糊</label>
-            <span>{settings.blurAmount}px</span>
-          </div>
-          <input 
-            type="range" min="0" max="100" 
-            value={settings.blurAmount} 
-            onChange={e => handleChange('blurAmount', Number(e.target.value))}
-            className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-zinc-100"
-          />
-        </div>
+        
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed px-1">
+          * 智能算法将自动优化边距、圆角和阴影，为您呈现最佳视觉效果。
+        </p>
       </div>
     </div>
   );

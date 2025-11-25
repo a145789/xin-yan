@@ -71,7 +71,7 @@ export const isColorGood = (rgb: RGB): boolean => {
   return true;
 };
 
-export const extractColors = async (imageElement: HTMLImageElement, count: number = 10): Promise<string[]> => {
+export const extractColors = async (imageElement: HTMLImageElement, count: number = 5): Promise<string[]> => {
   const colorThief = new ColorThief();
   // Get a much larger palette to choose from
   const palette = await colorThief.getPalette(imageElement, 50);
@@ -146,4 +146,56 @@ export const extractColors = async (imageElement: HTMLImageElement, count: numbe
   }
 
   return selected.map(c => c.hex).slice(0, count);
+};
+
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ */
+export const hslToRgb = (h: number, s: number, l: number): RGB => {
+    let r, g, b;
+
+    if (s === 0) {
+        r = g = b = l; // achromatic
+    } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        };
+
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+};
+
+export const adjustColorForBackground = (hex: string): string => {
+    // 1. Parse Hex to RGB
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // 2. Convert to HSL
+    // eslint-disable-next-line prefer-const
+    let [h, s, l] = rgbToHsl(r, g, b);
+
+    // 3. Clamp Saturation (10% - 30%)
+    s = Math.max(0.1, Math.min(0.3, s));
+
+    // 4. Clamp Lightness (60% - 85%)
+    l = Math.max(0.6, Math.min(0.85, l));
+
+    // 5. Convert back to Hex
+    const [newR, newG, newB] = hslToRgb(h, s, l);
+    return rgbToHex(newR, newG, newB);
 };

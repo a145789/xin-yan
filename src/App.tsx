@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { extractColors } from './utils/colorUtils';
+import { extractColors, adjustColorForBackground } from './utils/colorUtils';
 import { generatePostcard, generateBlurredPostcard } from './utils/imageUtils';
 import { Header } from './components/Header';
 import { ImageUploader } from './components/ImageUploader';
@@ -14,11 +14,7 @@ function App() {
   const [blurredImage, setBlurredImage] = useState<string | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   
-  const [settings, setSettings] = useState({
-    padding: 10,
-    borderRadius: 20,
-    blurAmount: 40
-  });
+  const [layoutMode, setLayoutMode] = useState<'standard' | 'polaroid'>('standard');
 
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -47,16 +43,25 @@ function App() {
         });
       }
 
-      const colors = await extractColors(imageRef.current, 10);
+      const colors = await extractColors(imageRef.current, 5);
       
-      const postcards = colors.map(color => ({
-        url: generatePostcard(imageRef.current!, color, settings.padding, settings.borderRadius, settings.blurAmount),
-        color
-      }));
+      const postcards = colors.map((color, index) => {
+        // Muted Palette: Adjust primary color
+        const primaryColor = adjustColorForBackground(color);
+        
+        // Secondary color for gradient: Use the next color in the palette, or wrap around
+        const nextColor = colors[(index + 1) % colors.length];
+        const secondaryColor = adjustColorForBackground(nextColor);
+
+        return {
+          url: generatePostcard(imageRef.current!, primaryColor, secondaryColor, layoutMode),
+          color: primaryColor // Display the adjusted primary color code
+        };
+      });
       
       setGeneratedImages(postcards);
 
-      const blurred = generateBlurredPostcard(imageRef.current!, settings.padding, settings.borderRadius, settings.blurAmount);
+      const blurred = generateBlurredPostcard(imageRef.current!, layoutMode);
       setBlurredImage(blurred);
 
     } catch (error) {
@@ -69,13 +74,13 @@ function App() {
   // Auto-generate when image loads or settings change
   useEffect(() => {
     if (imageUrl) {
-      // Debounce slightly to avoid rapid re-generation during slider drag
+      // Debounce slightly to avoid rapid re-generation
       const timer = setTimeout(() => {
         processImage();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [imageUrl, settings]);
+  }, [imageUrl, layoutMode]);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black transition-colors duration-300">
@@ -88,7 +93,7 @@ function App() {
             <ImageUploader onImageSelect={handleImageSelect} />
             
             {imageUrl && (
-              <SettingsPanel settings={settings} setSettings={setSettings} />
+              <SettingsPanel layoutMode={layoutMode} setLayoutMode={setLayoutMode} />
             )}
             
             {/* Instruction / Tip */}
