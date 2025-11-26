@@ -14,14 +14,13 @@ interface PostcardPreviewProps {
   loading: boolean;
 }
 
-export function PostcardPreview({ 
-  originalUrl, 
-  imageRef, 
-  generatedImages, 
-  blurredImage, 
-  loading 
+export function PostcardPreview({
+  originalUrl,
+  imageRef,
+  generatedImages,
+  blurredImage,
+  loading,
 }: PostcardPreviewProps) {
-  
   if (!originalUrl) {
     return (
       <div className="flex flex-col items-center justify-center h-64 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-400">
@@ -35,12 +34,7 @@ export function PostcardPreview({
     <div className="space-y-8">
       {/* Hidden original image for processing */}
       <div className="hidden">
-        <img 
-          ref={imageRef} 
-          src={originalUrl} 
-          alt="Original" 
-          crossOrigin="anonymous"
-        />
+        <img ref={imageRef} src={originalUrl} alt="Original" crossOrigin="anonymous" />
       </div>
 
       {loading && (
@@ -53,7 +47,7 @@ export function PostcardPreview({
       {!loading && (generatedImages.length > 0 || blurredImage) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {blurredImage && (
-            <div 
+            <div
               className="group relative rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer bg-white dark:bg-zinc-900 ring-1 ring-black/5 dark:ring-white/10"
               onClick={() => downloadImage(blurredImage, 'postcard-blur.png')}
             >
@@ -66,10 +60,10 @@ export function PostcardPreview({
               </div>
             </div>
           )}
-          
+
           {generatedImages.map((img, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className="group relative rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer bg-white dark:bg-zinc-900 ring-1 ring-black/5 dark:ring-white/10"
               onClick={() => downloadImage(img.url, `postcard-${img.color}.png`)}
             >
@@ -81,10 +75,10 @@ export function PostcardPreview({
                 </div>
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: img.color }}></div>
-                    <span className="text-xs text-white font-mono">{img.color}</span>
-                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: img.color }}></div>
+                  <span className="text-xs text-white font-mono">{img.color}</span>
+                </div>
               </div>
             </div>
           ))}

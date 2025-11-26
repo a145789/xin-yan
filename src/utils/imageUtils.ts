@@ -1,11 +1,7 @@
-export const generatePostcard = (
-  image: HTMLImageElement,
-  primaryColor: string,
-  secondaryColor: string
-): string => {
+export const generatePostcard = (image: HTMLImageElement, primaryColor: string, secondaryColor: string): string => {
   const width = image.naturalWidth;
   const height = image.naturalHeight;
-  
+
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -26,7 +22,7 @@ export const generatePostcard = (
   tempCanvas.width = width;
   tempCanvas.height = height;
   const tempCtx = tempCanvas.getContext('2d');
-  
+
   if (tempCtx) {
     // Draw the same gradient on temp canvas
     const tempGradient = tempCtx.createLinearGradient(0, 0, width, height);
@@ -34,7 +30,7 @@ export const generatePostcard = (
     tempGradient.addColorStop(1, secondaryColor);
     tempCtx.fillStyle = tempGradient;
     tempCtx.fillRect(0, 0, width, height);
-    
+
     // Apply subtle blur and draw back with low opacity for soft effect
     ctx.save();
     ctx.filter = 'blur(30px)'; // 浅浅的模糊
@@ -59,15 +55,15 @@ export const generatePostcard = (
   const y = paddingTop;
 
   // Smart Radius: Small, sharp corners
-  const radius = Math.max(2, Math.min(width, height) * 0.003); 
+  const radius = Math.max(2, Math.min(width, height) * 0.003);
 
   // 4. Draw Diffused Shadow
   ctx.save();
   ctx.shadowColor = hexToRgba(primaryColor, 0.4);
-  ctx.shadowBlur = Math.min(width, height) * 0.08; 
+  ctx.shadowBlur = Math.min(width, height) * 0.08;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = Math.min(width, height) * 0.04;
-  
+
   ctx.fillStyle = 'white';
   roundedRect(ctx, x, y, innerWidth, innerHeight, radius);
   ctx.fill();
@@ -85,65 +81,64 @@ export const generatePostcard = (
 
 // Helper to draw noise
 const drawNoise = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    const w = ctx.canvas.width;
-    const h = ctx.canvas.height;
-    const iData = ctx.createImageData(w, h);
-    const buffer32 = new Uint32Array(iData.data.buffer);
-    const len = buffer32.length;
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
+  const iData = ctx.createImageData(w, h);
+  const buffer32 = new Uint32Array(iData.data.buffer);
+  const len = buffer32.length;
 
-    for (let i = 0; i < len; i++) {
-        if (Math.random() < 0.1) { // 10% density
-            // White noise with very low alpha
-            // Little endian: AABBGGRR
-            // Alpha = 15 (approx 6%), RGB = 255
-            buffer32[i] = 0x0f000000; 
-        }
+  for (let i = 0; i < len; i++) {
+    if (Math.random() < 0.1) {
+      // 10% density
+      // White noise with very low alpha
+      // Little endian: AABBGGRR
+      // Alpha = 15 (approx 6%), RGB = 255
+      buffer32[i] = 0x0f000000;
     }
-    
-    // Draw noise on a temp canvas to handle scaling if needed, 
-    // but here we are drawing directly to the main canvas context? 
-    // Wait, putImageData ignores current transform and clips.
-    // Better to draw to a temp canvas and drawImage it back if we had transforms.
-    // Since we are at 0,0 with no transform, putImageData is fine but it overwrites.
-    // We want OVERLAY.
-    
-    // Better approach for overlay:
-    // Create a small noise pattern and repeat it? Or just fill a temp canvas and draw it with globalAlpha.
-    
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    const tempCtx = tempCanvas.getContext('2d');
-    if (tempCtx) {
-        const imgData = tempCtx.createImageData(width, height);
-        const data = imgData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            const val = Math.random() * 255;
-            data[i] = val;     // r
-            data[i + 1] = val; // g
-            data[i + 2] = val; // b
-            data[i + 3] = 20;  // alpha (low opacity)
-        }
-        tempCtx.putImageData(imgData, 0, 0);
-        
-        ctx.save();
-        ctx.globalCompositeOperation = 'overlay';
-        ctx.drawImage(tempCanvas, 0, 0);
-        ctx.restore();
+  }
+
+  // Draw noise on a temp canvas to handle scaling if needed,
+  // but here we are drawing directly to the main canvas context?
+  // Wait, putImageData ignores current transform and clips.
+  // Better to draw to a temp canvas and drawImage it back if we had transforms.
+  // Since we are at 0,0 with no transform, putImageData is fine but it overwrites.
+  // We want OVERLAY.
+
+  // Better approach for overlay:
+  // Create a small noise pattern and repeat it? Or just fill a temp canvas and draw it with globalAlpha.
+
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const tempCtx = tempCanvas.getContext('2d');
+  if (tempCtx) {
+    const imgData = tempCtx.createImageData(width, height);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const val = Math.random() * 255;
+      data[i] = val; // r
+      data[i + 1] = val; // g
+      data[i + 2] = val; // b
+      data[i + 3] = 20; // alpha (low opacity)
     }
+    tempCtx.putImageData(imgData, 0, 0);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.drawImage(tempCanvas, 0, 0);
+    ctx.restore();
+  }
 };
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-export const generateBlurredPostcard = (
-  image: HTMLImageElement
-): string => {
+export const generateBlurredPostcard = (image: HTMLImageElement): string => {
   const width = image.naturalWidth;
   const height = image.naturalHeight;
 
@@ -206,7 +201,14 @@ export const generateBlurredPostcard = (
   return canvas.toDataURL('image/png');
 };
 
-function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);

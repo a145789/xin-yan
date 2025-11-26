@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useEffectEvent } from 'react';
 import { extractColors } from './utils/colorUtils';
 import { generatePostcard, generateBlurredPostcard } from './utils/imageUtils';
 import { Header } from './components/Header';
@@ -20,7 +20,7 @@ function App() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   const handleImageSelect = (url: string) => {
@@ -29,7 +29,7 @@ function App() {
     setBlurredImage(null);
   };
 
-  const processImage = async () => {
+  const processImage = useEffectEvent(async () => {
     if (!imageRef.current || !imageUrl) return;
 
     setLoading(true);
@@ -59,34 +59,33 @@ function App() {
         const postcardUrl = generatePostcard(
           imageRef.current!,
           primaryColor,
-          secondaryColor // 第一个颜色渐变到第二个颜色
+          secondaryColor, // 第一个颜色渐变到第二个颜色
         );
 
-        setGeneratedImages([{
-          url: postcardUrl,
-          color: primaryColor
-        }]);
+        setGeneratedImages([
+          {
+            url: postcardUrl,
+            color: primaryColor,
+          },
+        ]);
       } else if (colors.length === 1) {
         // 如果只有1个颜色,使用相同颜色
         const primaryColor = colors[0];
-        const postcardUrl = generatePostcard(
-          imageRef.current!,
-          primaryColor,
-          primaryColor
-        );
+        const postcardUrl = generatePostcard(imageRef.current!, primaryColor, primaryColor);
 
-        setGeneratedImages([{
-          url: postcardUrl,
-          color: primaryColor
-        }]);
+        setGeneratedImages([
+          {
+            url: postcardUrl,
+            color: primaryColor,
+          },
+        ]);
       }
-
     } catch (error) {
-      console.error("Error processing image:", error);
+      console.error('Error processing image:', error);
     } finally {
       setLoading(false);
     }
-  };
+  });
 
   // Auto-generate when image loads
   useEffect(() => {
@@ -107,24 +106,26 @@ function App() {
           {/* Left Sidebar: Controls */}
           <div className="lg:col-span-4 space-y-6 sticky top-8">
             <ImageUploader onImageSelect={handleImageSelect} />
-            
+
             {/* Instruction / Tip */}
             {!imageUrl && (
-               <div className="bg-zinc-100 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-                  <p>✨ <b>小贴士:</b> 上传一张图片,我们将自动为您提取主题色并生成精美的明信片。</p>
-               </div>
+              <div className="bg-zinc-100 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
+                <p>
+                  ✨ <b>小贴士:</b> 上传一张图片,我们将自动为您提取主题色并生成精美的明信片。
+                </p>
+              </div>
             )}
           </div>
 
           {/* Right Content: Preview & Results */}
           <div className="lg:col-span-8">
-             <PostcardPreview 
-               originalUrl={imageUrl}
-               imageRef={imageRef}
-               generatedImages={generatedImages}
-               blurredImage={blurredImage}
-               loading={loading}
-             />
+            <PostcardPreview
+              originalUrl={imageUrl}
+              imageRef={imageRef}
+              generatedImages={generatedImages}
+              blurredImage={blurredImage}
+              loading={loading}
+            />
           </div>
         </div>
       </div>
