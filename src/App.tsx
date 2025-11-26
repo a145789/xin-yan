@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { extractColors, adjustColorForBackground } from './utils/colorUtils';
+import { extractColors } from './utils/colorUtils';
 import { generatePostcard, generateBlurredPostcard } from './utils/imageUtils';
 import { Header } from './components/Header';
 import { ImageUploader } from './components/ImageUploader';
-import { SettingsPanel } from './components/SettingsPanel';
 import { PostcardPreview } from './components/PostcardPreview';
 import './index.css';
 
@@ -13,8 +12,6 @@ function App() {
   const [generatedImages, setGeneratedImages] = useState<{ url: string; color: string }[]>([]);
   const [blurredImage, setBlurredImage] = useState<string | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  
-  const [layoutMode, setLayoutMode] = useState<'standard' | 'polaroid'>('standard');
 
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -36,33 +33,53 @@ function App() {
     if (!imageRef.current || !imageUrl) return;
 
     setLoading(true);
+    setGeneratedImages([]);
+    setBlurredImage(null);
+
     try {
       if (!imageRef.current.complete) {
         await new Promise((resolve) => {
-            if(imageRef.current) imageRef.current.onload = resolve;
+          if (imageRef.current) imageRef.current.onload = resolve;
         });
       }
 
-      const colors = await extractColors(imageRef.current, 5);
-      
-      const postcards = colors.map((color, index) => {
-        // Muted Palette: Adjust primary color
-        const primaryColor = adjustColorForBackground(color);
-        
-        // Secondary color for gradient: Use the next color in the palette, or wrap around
-        const nextColor = colors[(index + 1) % colors.length];
-        const secondaryColor = adjustColorForBackground(nextColor);
-
-        return {
-          url: generatePostcard(imageRef.current!, primaryColor, secondaryColor, layoutMode),
-          color: primaryColor // Display the adjusted primary color code
-        };
-      });
-      
-      setGeneratedImages(postcards);
-
-      const blurred = generateBlurredPostcard(imageRef.current!, layoutMode);
+      // 步骤1: 优先生成高斯模糊版本
+      const blurred = generateBlurredPostcard(imageRef.current!);
       setBlurredImage(blurred);
+
+      // 步骤2: 提取2个主色用于渐变
+      const result = await extractColors(imageRef.current, 2);
+      const { colors } = result;
+
+      // 步骤3: 生成1张渐变背景明信片
+      if (colors.length >= 2) {
+        const primaryColor = colors[0];
+        const secondaryColor = colors[1];
+
+        const postcardUrl = generatePostcard(
+          imageRef.current!,
+          primaryColor,
+          secondaryColor // 第一个颜色渐变到第二个颜色
+        );
+
+        setGeneratedImages([{
+          url: postcardUrl,
+          color: primaryColor
+        }]);
+      } else if (colors.length === 1) {
+        // 如果只有1个颜色,使用相同颜色
+        const primaryColor = colors[0];
+        const postcardUrl = generatePostcard(
+          imageRef.current!,
+          primaryColor,
+          primaryColor
+        );
+
+        setGeneratedImages([{
+          url: postcardUrl,
+          color: primaryColor
+        }]);
+      }
 
     } catch (error) {
       console.error("Error processing image:", error);
@@ -71,16 +88,15 @@ function App() {
     }
   };
 
-  // Auto-generate when image loads or settings change
+  // Auto-generate when image loads
   useEffect(() => {
     if (imageUrl) {
-      // Debounce slightly to avoid rapid re-generation
       const timer = setTimeout(() => {
         processImage();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [imageUrl, layoutMode]);
+  }, [imageUrl]);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black transition-colors duration-300">
@@ -92,14 +108,10 @@ function App() {
           <div className="lg:col-span-4 space-y-6 sticky top-8">
             <ImageUploader onImageSelect={handleImageSelect} />
             
-            {imageUrl && (
-              <SettingsPanel layoutMode={layoutMode} setLayoutMode={setLayoutMode} />
-            )}
-            
             {/* Instruction / Tip */}
             {!imageUrl && (
                <div className="bg-zinc-100 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-                  <p>✨ <b>小贴士：</b> 上传一张图片，我们将自动为您提取主题色并生成一系列精美的明信片。</p>
+                  <p>✨ <b>小贴士:</b> 上传一张图片,我们将自动为您提取主题色并生成精美的明信片。</p>
                </div>
             )}
           </div>

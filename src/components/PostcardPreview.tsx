@@ -51,7 +51,7 @@ export function PostcardPreview({
       )}
 
       {!loading && (generatedImages.length > 0 || blurredImage) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {blurredImage && (
             <div 
               className="group relative rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer bg-white dark:bg-zinc-900 ring-1 ring-black/5 dark:ring-white/10"

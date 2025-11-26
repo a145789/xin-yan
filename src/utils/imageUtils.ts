@@ -1,8 +1,7 @@
 export const generatePostcard = (
   image: HTMLImageElement,
   primaryColor: string,
-  secondaryColor: string,
-  layoutMode: 'standard' | 'polaroid' = 'standard'
+  secondaryColor: string
 ): string => {
   const width = image.naturalWidth;
   const height = image.naturalHeight;
@@ -21,43 +20,55 @@ export const generatePostcard = (
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 
+  // 1.5. Add subtle blur effect to gradient background
+  // Create a temporary canvas with the gradient
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const tempCtx = tempCanvas.getContext('2d');
+  
+  if (tempCtx) {
+    // Draw the same gradient on temp canvas
+    const tempGradient = tempCtx.createLinearGradient(0, 0, width, height);
+    tempGradient.addColorStop(0, primaryColor);
+    tempGradient.addColorStop(1, secondaryColor);
+    tempCtx.fillStyle = tempGradient;
+    tempCtx.fillRect(0, 0, width, height);
+    
+    // Apply subtle blur and draw back with low opacity for soft effect
+    ctx.save();
+    ctx.filter = 'blur(30px)'; // 浅浅的模糊
+    ctx.globalAlpha = 0.4; // 低透明度,保留原渐变
+    ctx.drawImage(tempCanvas, 0, 0);
+    ctx.restore();
+  }
+
   // 2. Draw Noise Texture
   drawNoise(ctx, width, height);
 
-  // 3. Smart Defaults & Layout
-  let paddingLeft, paddingRight, paddingTop, paddingBottom;
-  
-  if (layoutMode === 'polaroid') {
-      // Polaroid: Larger bottom padding
-      const sidePadding = Math.min(width, height) * 0.05;
-      paddingLeft = paddingRight = paddingTop = sidePadding;
-      paddingBottom = Math.min(width, height) * 0.18;
-  } else {
-      // Standard: Even padding
-      const padding = Math.min(width, height) * 0.07;
-      paddingLeft = paddingRight = paddingTop = paddingBottom = padding;
-  }
+  // 3. Standard Layout - 均匀边距
+  const padding = Math.min(width, height) * 0.07;
+  const paddingLeft = padding;
+  const paddingRight = padding;
+  const paddingTop = padding;
+  const paddingBottom = padding;
 
   const innerWidth = width - (paddingLeft + paddingRight);
   const innerHeight = height - (paddingTop + paddingBottom);
   const x = paddingLeft;
   const y = paddingTop;
 
-  // Smart Radius: Small, sharp corners (2px - 4px scaled by resolution)
-  // We'll use a small percentage of min dimension to keep it proportional but sharp
+  // Smart Radius: Small, sharp corners
   const radius = Math.max(2, Math.min(width, height) * 0.003); 
 
   // 4. Draw Diffused Shadow
   ctx.save();
-  // Shadow color: Primary color with low opacity
   ctx.shadowColor = hexToRgba(primaryColor, 0.4);
-  // Large blur radius for diffusion
   ctx.shadowBlur = Math.min(width, height) * 0.08; 
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = Math.min(width, height) * 0.04;
   
-  // Draw rounded rect for shadow casting
-  ctx.fillStyle = 'white'; // Placeholder for shadow casting
+  ctx.fillStyle = 'white';
   roundedRect(ctx, x, y, innerWidth, innerHeight, radius);
   ctx.fill();
   ctx.restore();
@@ -131,8 +142,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 export const generateBlurredPostcard = (
-  image: HTMLImageElement,
-  layoutMode: 'standard' | 'polaroid' = 'standard'
+  image: HTMLImageElement
 ): string => {
   const width = image.naturalWidth;
   const height = image.naturalHeight;
@@ -158,17 +168,12 @@ export const generateBlurredPostcard = (
   // 3. Draw Noise Texture
   drawNoise(ctx, width, height);
 
-  // 4. Smart Defaults & Layout
-  let paddingLeft, paddingRight, paddingTop, paddingBottom;
-  
-  if (layoutMode === 'polaroid') {
-      const sidePadding = Math.min(width, height) * 0.05;
-      paddingLeft = paddingRight = paddingTop = sidePadding;
-      paddingBottom = Math.min(width, height) * 0.18;
-  } else {
-      const padding = Math.min(width, height) * 0.07;
-      paddingLeft = paddingRight = paddingTop = paddingBottom = padding;
-  }
+  // 4. Standard Layout
+  const padding = Math.min(width, height) * 0.07;
+  const paddingLeft = padding;
+  const paddingRight = padding;
+  const paddingTop = padding;
+  const paddingBottom = padding;
 
   const innerWidth = width - (paddingLeft + paddingRight);
   const innerHeight = height - (paddingTop + paddingBottom);
@@ -179,8 +184,6 @@ export const generateBlurredPostcard = (
   const radius = Math.max(2, Math.min(width, height) * 0.003);
 
   // 5. Draw Diffused Shadow
-  // For blurred background, we can pick a dark shadow or a color from the image if we had it.
-  // Since we don't pass color here, we'll use a standard soft black shadow.
   ctx.save();
   ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
   ctx.shadowBlur = Math.min(width, height) * 0.08;
